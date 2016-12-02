@@ -1,10 +1,13 @@
 let debug = require("utils.debug");
 
 module.exports = {
-    findEnergySink: function(room) {
-        return findEmpty(room.find(FIND_CONSTRUCTION_SITES))
-            || findEmpty(room.find(FIND_MY_SPAWNS))
+    findEnergySink: function(creep) {
+        var room = creep.room;
+        var result = 
+            findEmpty(room.find(FIND_MY_SPAWNS))
+            || creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
             || room.controller;    
+        return result;
     }
 };
 
