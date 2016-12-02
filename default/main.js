@@ -1,7 +1,7 @@
 let roleHarvester = require("role.harvester");
 let roleSpawner = require("role.spawner");
 let debug = require("utils.debug");
-let globals = require("utils.globals");
+let global = require("utils.globals");
 debug.turnOn();
 
 function processCreeps() {
@@ -14,7 +14,7 @@ function processCreeps() {
         }
         
         switch (creep.memory.role) {
-        case globals.Role.HARVESTER: 
+        case global.Role.HARVESTER: 
             ++totalCreeps;
             roleHarvester.act(creep); 
             break;
