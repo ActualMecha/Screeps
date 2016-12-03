@@ -8,10 +8,39 @@ let State = {
     Transferring: 5
 }
 
+function occupySpot(creep) {
+    var spots = [];
+    Memory.rooms[creep.room.name].miningSpots.forEach(function(spot) {
+        if (!spot.occupied) {
+            var position = new RoomPosition(spot.x, spot.y, creep.room.name);
+            position.spot = spot;
+            spots.push(position);
+        }
+    })
+    var closest = creep.pos.findClosestByPath(spots);
+    closest.spot.occupied = true;
+    return closest.spot;
+}
+
 function initialize(creep) {
-    creep.memory.source = creep.pos.findClosestByPath(FIND_SOURCES).id;
+    creep.memory.miningSpot = occupySpot(creep);
     creep.memory.state = State.GoingToSource;
     creep.memory.initialized = true;
+}
+
+function planRoad(creep) {
+    if (creep.memory.buildRoad === true) {
+        var foundRoad = false;
+        for (var item in creep.pos.look()) {
+            if (item.type == LOOK_STRUCTURES || item.type == LOOK_CONSTRUCTION_SITES) {
+                foundRoad = true;
+                break;
+            }
+        }
+        if (!foundRoad) {
+            creep.pos.createConstructionSite(STRUCTURE_ROAD);
+        }
+    }
 }
 
 module.exports = {
@@ -19,30 +48,18 @@ module.exports = {
         if (!creep.memory.initialized) {
             initialize(creep);
         }
+        var miningSpot = creep.memory.miningSpot;
         switch (creep.memory.state) {
         case State.GoingToSource:
-            var source = Game.getObjectById(creep.memory.source);
-            creep.moveTo(source);
-            if (creep.memory.buildRoad === true) {
-                var foundRoad = false;
-                for (var item in creep.pos.look()) {
-                    if (item.type == LOOK_STRUCTURES || item.type == LOOK_CONSTRUCTION_SITES) {
-                        foundRoad = true;
-                        break;
-                    }
-                }
-                if (!foundRoad) {
-                    creep.pos.createConstructionSite(STRUCTURE_ROAD);
-                }
-            }
-            if (creep.pos.isNearTo(source)) {
+            creep.moveTo(miningSpot.x, miningSpot.y);
+            planRoad(creep);
+            if (creep.pos.x == miningSpot.x && creep.pos.y == miningSpot.y) {
                 creep.memory.state = State.Mining;
             }
             break;
             
         case State.Mining:
-            var source = Game.getObjectById(creep.memory.source);
-            creep.harvest(source);
+            creep.harvest(Game.getObjectById(miningSpot.sourceId));
             if (creep.carryCapacity == creep.carry.energy) {
                 creep.memory.state = State.GoingToTarget;
             }

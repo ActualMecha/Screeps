@@ -46,7 +46,11 @@ function processRoom(room) {
                         passable &= OBSTACLE_OBJECT_TYPES.indexOf(object.terrain) == -1;
                     });
                     if (passable) {
-                        miningSpots.push({spot, occupied: false});
+                        miningSpots.push({x: spot.x, 
+                            y: spot.y, 
+                            occupied: false, 
+                            sourceId: source.id
+                        });
                     }
                 }
             }
