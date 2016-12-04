@@ -6,10 +6,6 @@ var global = require("utils.globals");
 var rolesManager = require("manager.roles");
 debug.turnOn();
 
-if (Memory.rooms === undefined) {
-    Memory.rooms = {};
-}
-
 function processCreeps() {
     var totalHarvesters = 0;
     for (var creepName in Game.creeps) {
@@ -27,7 +23,6 @@ function processSpawns() {
         roleSpawner.run(spawn);
     }
 }
-
 
 function initCreeps() {
     for(var name in Memory.creeps) {
