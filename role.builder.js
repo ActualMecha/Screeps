@@ -45,7 +45,7 @@ function initRoom(room) {
 	});
 
 	damaged = _.filter(damaged, function(structure) {
-		return structure.hits < minIntegrity * 10000
+		return structure.hits < minIntegrity * 10000;
 	});
 	builderRoom[room.name] = {
 		source: resourceManager.findEnergySource(room),
@@ -54,7 +54,7 @@ function initRoom(room) {
 }
 
 function rolePositions(room) {
-	return 5;
+	return 3;
 }
 
 function getCreepBlueprint(spawningPos, room) {
