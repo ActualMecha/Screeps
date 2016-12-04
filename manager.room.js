@@ -1,21 +1,26 @@
-var harvester = require("role.harvester");
-
-var memory;
+var rooms;
+var roomCallouts = [];
 
 module.exports = {
+    subscribe: function (callout) {
+        roomCallouts.push(callout);
+    },
+
     init: function() {
-        memory = [];
+        rooms = [];
         for (var roomName in Game.rooms) {
             var room = Game.rooms[roomName];
-            memory[roomName] = {
+            rooms[roomName] = {
                 population: []
             };
-            harvester.initRoom(room);
+            roomCallouts.forEach(function (callout) {
+                callout(room);
+            });
         };
     },
     
     addCreep: function(creep) {
-        var roomMemory = memory[creep.room.name];
+        var roomMemory = rooms[creep.room.name];
         var role = creep.memory.role;
         if (!roomMemory.population[role]) {
             roomMemory.population[role] = 1;
@@ -26,6 +31,6 @@ module.exports = {
     },
     
     getRoles: function(room, role) {
-        return memory[room.name].population[role] || 0;
+        return rooms[room.name].population[role] || 0;
     }
 };

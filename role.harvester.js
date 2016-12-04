@@ -1,76 +1,18 @@
 var debug = require("utils.debug")
 var resourceManager = require("manager.resources");
 var global = require("utils.globals");
+var roomManager = require("manager.room");
+
+roomManager.subscribe(initRoom);
 
 module.exports = {
-    act: function(creep) {
-        switch (creep.memory.harvester.state) {
-        case State.GOTO_SOURCE: gotoSource(creep); break;
-        case State.MINE: mine(creep); break;
-        case State.LOOK_FOR_TARGET: lookForTarget(creep); break;
-        case State.GOTO_TARGET: gotoTarget(creep); break;
-        case State.TRANSFER: transfer(creep); break;
-        default: 
-            debug.log("Creep ", creep.name, " has no state.");
-            creep.memory.harvester.state = State.GOTO_SOURCE;
-        }   
-    },
-    
-    initRoom: function(room) {
-        if (room.memory.harvester) return;
-        
-        var miningSpots = [];
-        room.find(FIND_SOURCES).forEach(function (source) {
-            var position = source.pos;
-            for (var x = position.x - 1; x <= position.x + 1; ++x) {
-                for (var y = position.y - 1; y <= position.y + 1; ++y) {
-                    var passable = true;
-                    var spot = new RoomPosition(x, y, room.name);
-                    spot.look(LOOK_TERRAIN).forEach(function (object) {
-                        passable &= OBSTACLE_OBJECT_TYPES.indexOf(object.terrain) == -1;
-                    });
-                    if (passable) {
-                        var miningSpot = {
-                            x: x,
-                            y: y,
-                            occupied: false,
-                            sourceId: source.id
-                        };
-                        miningSpots.push(miningSpot);
-                    }
-                }
-            }
-        });
-        room.memory.harvester = {
-            miningSpots: miningSpots
-        };
-    },
-    
-    rolePositions: function(room) {
-        return room.memory.harvester.miningSpots.length;
-    },
-    
-    getCreepBlueprint: function(spawningPos, room) {
-        var memory = {
-            role: global.Role.HARVESTER,
-            harvester: {
-                miningSpot: occupySpot(spawningPos, room),
-                room: room.name,
-                state: State.GOTO_SOURCE
-            }
-        };
-        return {
-            bodyParts: [WORK, CARRY, MOVE],
-            memory: memory
-        };
-    },
-    
-    removeCreep: function(creepMemory) {
-        if (!creepMemory.harvester) return;
-        getSpotFromMemory(creepMemory).occupied = false;
-        delete creepMemory.harvester;
-    }
+    act: function(creep) { act(creep); },
+    initRoom: function(room) { initRoom(room); },
+    rolePositions: function(room) { return rolePositions(room); },
+    getCreepBlueprint: function(spawningPos, room) { return getCreepBlueprint(spawningPos, room); },
+    removeCreep: function(creepMemory) { removeCreep(creepMemory) }
 };
+
 
 let State = {
     GOTO_SOURCE: 1,
@@ -78,6 +20,74 @@ let State = {
     LOOK_FOR_TARGET: 3,
     GOTO_TARGET: 4,
     TRANSFER: 5
+}
+
+function act(creep) {
+    switch (creep.memory.harvester.state) {
+    case State.GOTO_SOURCE: gotoSource(creep); break;
+    case State.MINE: mine(creep); break;
+    case State.LOOK_FOR_TARGET: lookForTarget(creep); break;
+    case State.GOTO_TARGET: gotoTarget(creep); break;
+    case State.TRANSFER: transfer(creep); break;
+    default: 
+        debug.log("Creep ", creep.name, " has no state.");
+        creep.memory.harvester.state = State.GOTO_SOURCE;
+    }   
+}
+
+function initRoom(room) {
+    if (room.memory.harvester) return;
+    
+    var miningSpots = [];
+    room.find(FIND_SOURCES).forEach(function (source) {
+        var position = source.pos;
+        for (var x = position.x - 1; x <= position.x + 1; ++x) {
+            for (var y = position.y - 1; y <= position.y + 1; ++y) {
+                var passable = true;
+                var spot = new RoomPosition(x, y, room.name);
+                spot.look(LOOK_TERRAIN).forEach(function (object) {
+                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object.terrain) == -1;
+                });
+                if (passable) {
+                    var miningSpot = {
+                        x: x,
+                        y: y,
+                        occupied: false,
+                        sourceId: source.id
+                    };
+                    miningSpots.push(miningSpot);
+                }
+            }
+        }
+    });
+    room.memory.harvester = {
+        miningSpots: miningSpots
+    };
+}
+
+function rolePositions(room) {
+    return room.memory.harvester.miningSpots.length;
+}
+
+function getCreepBlueprint(spawningPos, room) {
+    var memory = {
+        role: global.Role.HARVESTER,
+        harvester: {
+            miningSpot: occupySpot(spawningPos, room),
+            room: room.name,
+            state: State.GOTO_SOURCE
+        }
+    };
+    return {
+        bodyParts: [WORK, CARRY, MOVE],
+        memory: memory
+    };
+}
+
+function removeCreep(creepMemory) {
+    if (!creepMemory.harvester) return;
+    getSpotFromMemory(creepMemory).occupied = false;
+    delete creepMemory.harvester;
 }
 
 function occupySpot(creepPos, room) {

@@ -3,10 +3,10 @@ var roomManager = require("manager.room");
 
 var roles = [];
 roles[global.Role.HARVESTER] = require("role.harvester");
+roles[global.Role.BUILDER] = require("role.builder");
 
 module.exports = {
     act: function (creep) {
-    	
         roles[creep.memory.role].act(creep);   
     },
     

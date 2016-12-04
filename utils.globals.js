@@ -1,5 +1,6 @@
 module.exports = {
     Role: {
-        HARVESTER: 0
+        HARVESTER: 0,
+        BUILDER: 1
     }
 };

@@ -1,15 +1,20 @@
-var debug = require("utils.debug");
-
 module.exports = {
-    findEnergySink: function(creep) {
-        var room = creep.room;
-        var result = 
-            findEmpty(room.find(FIND_MY_SPAWNS))
-            || creep.pos.findClosestByRange(FIND_CONSTRUCTION_SITES)
-            || room.controller;    
-        return result;
-    }
+    findEnergySink: function(creep) { return findEnergySink(creep); },
+    findEnergySource: function(creep) {return findEnergySource(creep); }
 };
+
+function findEnergySource(room) {
+    var spawn = room.find(FIND_MY_SPAWNS)[0];
+    if (spawn.energy > 200) {
+        return spawn; 
+    }
+}
+
+function findEnergySink(creep) {
+    var room = creep.room;
+    return findEmpty(room.find(FIND_MY_SPAWNS))
+        || room.controller;
+}
 
 function findEmpty(entities) {
     for (var entityName in entities) {
