@@ -33,10 +33,19 @@ function act(creep) {
 
 function initRoom(room) {
 	var sites = room.find(FIND_CONSTRUCTION_SITES);
+	var minIntegrity = undefined;
 	var damaged = room.find(FIND_STRUCTURES, {
 		filter: function(structure) {
-			return structure.hits < structure.hitsMax;
+			var damaged = structure.hits < structure.hitsMax;
+			if (minIntegrity == undefined || (damaged && structure.hits < minIntegrity)) {
+				minIntegrity = structure.hits;
+			}
+			return damaged;
 		}
+	});
+
+	damaged = _.filter(damaged, function(structure) {
+		return structure.hits < minIntegrity * 10000
 	});
 	builderRoom[room.name] = {
 		source: resourceManager.findEnergySource(room),
