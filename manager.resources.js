@@ -1,4 +1,4 @@
-let debug = require("utils.debug");
+var debug = require("utils.debug");
 
 module.exports = {
     findEnergySink: function(creep) {

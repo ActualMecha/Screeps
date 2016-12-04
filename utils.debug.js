@@ -1,5 +1,9 @@
 function joinString(...messages) {
-    return messages.join("");
+    var string = [];
+    messages.forEach(function (message) {
+        string.push(message);
+    });
+    return string[0].join("");
 }
 
 module.exports = {
