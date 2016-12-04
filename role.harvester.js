@@ -139,7 +139,7 @@ function transfer(creep) {
     if (target instanceof ConstructionSite) {
         result = creep.build(target);
     }
-    else  {
+    else {
         result = creep.transfer(target, RESOURCE_ENERGY);
     }
     if (result != OK) {
