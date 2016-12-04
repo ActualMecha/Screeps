@@ -32,9 +32,15 @@ function act(creep) {
 }
 
 function initRoom(room) {
+	var sites = room.find(FIND_CONSTRUCTION_SITES);
+	var damaged = room.find(FIND_STRUCTURES, {
+		filter: function(structure) {
+			return structure.hits < structure.hitsMax;
+		}
+	});
 	builderRoom[room.name] = {
 		source: resourceManager.findEnergySource(room),
-		targets: room.find(FIND_CONSTRUCTION_SITES)
+		targets: sites.concat(damaged)
 	};
 }
 
@@ -108,12 +114,17 @@ function gotoTarget(creep) {
 
 function build(creep) {
 	var target = Game.getObjectById(creep.memory.builder.target);
-	if (!(target instanceof ConstructionSite)) {
+	if (target instanceof ConstructionSite) {
+		creep.build(target);
+	}
+	else if (target instanceof Structure && target.hits < target.hitsMax) {
+		creep.repair(target);
+	}
+	else {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
 	}
-	creep.build(target);
 	if (creep.carry.energy == 0) {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
 	}
