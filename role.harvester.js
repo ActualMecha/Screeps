@@ -1,5 +1,6 @@
 var debug = require("utils.debug")
 var resourceManager = require("manager.resources");
+var global = require("utils.globals");
 
 module.exports = {
     act: function(creep) {
@@ -45,16 +46,22 @@ module.exports = {
         };
     },
     
-    rolePlaces: function(room) {
+    rolePositions: function(room) {
         return room.memory.harvester.miningSpots.length;
     },
     
-    addCreep: function(creep) {
-        if (creep.memory.harvester) return;
-        creep.memory.harvester = {
-            miningSpot: occupySpot(creep),
-            room: creep.room.name,
-            state: State.GOTO_SOURCE
+    getCreepBlueprint: function(spawningPos, room) {
+        var memory = {
+            role: global.Role.HARVESTER,
+            harvester: {
+                miningSpot: occupySpot(spawningPos, room),
+                room: room.name,
+                state: State.GOTO_SOURCE
+            }
+        };
+        return {
+            bodyParts: [WORK, CARRY, MOVE],
+            memory: memory
         };
     },
     
@@ -73,19 +80,19 @@ let State = {
     TRANSFER: 5
 }
 
-function occupySpot(creep) {
+function occupySpot(creepPos, room) {
     var spots = [];
     var index = 0;
-    creep.room.memory.harvester.miningSpots.forEach(function (spot) {
+    room.memory.harvester.miningSpots.forEach(function (spot) {
         if (!spot.occupied) {
-            var position = new RoomPosition(spot.x, spot.y, creep.room.name);
+            var position = new RoomPosition(spot.x, spot.y, room.name);
             position.spot = spot;
             position.index = index;
             spots.push(position);
         }
         ++index;
     });
-    var closest = creep.pos.findClosestByPath(spots);
+    var closest = creepPos.findClosestByPath(spots);
     closest.spot.occupied = true;
     return closest.index;
 }
@@ -126,6 +133,11 @@ function lookForTarget(creep) {
 
 function gotoTarget(creep) {
     var target = Game.getObjectById(creep.memory.harvester.target);
+    if (target == null) {
+        creep.memory.harvester.state = State.LOOK_FOR_TARGET;
+        lookForTarget(creep);
+    }
+    
     creep.moveTo(target);
     if (creep.pos.isNearTo(target)) {
         creep.memory.harvester.state = State.TRANSFER;
@@ -134,6 +146,10 @@ function gotoTarget(creep) {
 
 function transfer(creep) {
     var target = Game.getObjectById(creep.memory.harvester.target);
+    if (target == null) {
+        creep.memory.harvester.state = State.LOOK_FOR_TARGET;
+        lookForTarget(creep);
+    }
     
     var result;
     if (target instanceof ConstructionSite) {

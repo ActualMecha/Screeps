@@ -3,6 +3,7 @@ var roleSpawner = require("role.spawner");
 var roomManager = require("manager.room");
 var debug = require("utils.debug");
 var global = require("utils.globals");
+var rolesManager = require("manager.roles");
 debug.turnOn();
 
 if (Memory.rooms === undefined) {
@@ -16,12 +17,7 @@ function processCreeps() {
         if (creep.spawning) {
             return;
         }
-    
-        switch (creep.memory.role) {
-        case global.Role.HARVESTER:
-            roleHarvester.act(creep); 
-            break;
-        }
+        rolesManager.act(creep);
     }
 }
 

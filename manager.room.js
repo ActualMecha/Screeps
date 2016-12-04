@@ -23,7 +23,6 @@ module.exports = {
         else {
             ++roomMemory.population[role];
         }
-        harvester.addCreep(creep);
     },
     
     getRoles: function(room, role) {
