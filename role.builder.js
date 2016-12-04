@@ -110,7 +110,7 @@ function getEnergy(creep) {
 
 function gotoTarget(creep) {
 	var target = Game.getObjectById(creep.memory.builder.target);
-	if (!target instanceof ConstructionSite) {
+	if (!(target instanceof ConstructionSite)) {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
