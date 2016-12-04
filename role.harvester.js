@@ -149,7 +149,8 @@ function gotoTarget(creep) {
     }
     
     creep.moveTo(target);
-    if (creep.pos.isNearTo(target)) {
+    var range = target instanceof StructureController ? 3 : 1;
+    if (creep.pos.inRangeTo(target, range)) {
         creep.memory.harvester.state = State.TRANSFER;
     }
 }
