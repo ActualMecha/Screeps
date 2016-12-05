@@ -1,15 +1,13 @@
-var roleHarvester = require("role.harvester");
-var roleSpawner = require("role.spawner");
-var roomManager = require("manager.room");
-var debug = require("utils.debug");
-var global = require("utils.globals");
-var rolesManager = require("manager.roles");
+const roleHarvester = require("./role.harvester");
+const roleSpawner = require("./role.spawner");
+const roomManager = require("./manager.room");
+const debug = require("./utils.debug");
+const rolesManager = require("./manager.roles");
 debug.turnOn();
 
 function processCreeps() {
-    var totalHarvesters = 0;
-    for (var creepName in Game.creeps) {
-        var creep = Game.creeps[creepName];
+    for (let creepName in Game.creeps) {
+        const creep = Game.creeps[creepName];
         if (creep.spawning) {
             return;
         }
@@ -18,17 +16,16 @@ function processCreeps() {
 }
 
 function processSpawns() {
-    for (var spawnName in Game.spawns) {
-        var spawn = Game.spawns[spawnName];
+    for (let spawnName in Game.spawns) {
+        const spawn = Game.spawns[spawnName];
         roleSpawner.run(spawn);
     }
 }
 
 function initCreeps() {
-    for(var name in Memory.creeps) {
-        var creep = Game.creeps[name];
+    for(let name in Memory.creeps) {
+        const creep = Game.creeps[name];
         if(creep) {
-            var creep = Game.creeps[name];
             roomManager.addCreep(creep);
         }
         else {

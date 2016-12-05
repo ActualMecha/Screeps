@@ -1,7 +1,7 @@
-var debug = require("utils.debug")
-var resourceManager = require("manager.resources");
-var global = require("utils.globals");
-var roomManager = require("manager.room");
+const debug = require("./utils.debug");
+const resourceManager = require("./manager.resources");
+const global = require("./utils.globals");
+const roomManager = require("./manager.room");
 
 roomManager.subscribe(initRoom);
 
@@ -14,13 +14,13 @@ module.exports = {
 };
 
 
-let State = {
+const State = {
     GOTO_SOURCE: 1,
     MINE: 2,
     LOOK_FOR_TARGET: 3,
     GOTO_TARGET: 4,
     TRANSFER: 5
-}
+};
 
 function act(creep) {
     switch (creep.memory.harvester.state) {
@@ -38,18 +38,18 @@ function act(creep) {
 function initRoom(room) {
     if (room.memory.harvester) return;
     
-    var miningSpots = [];
+    const miningSpots = [];
     room.find(FIND_SOURCES).forEach(function (source) {
-        var position = source.pos;
-        for (var x = position.x - 1; x <= position.x + 1; ++x) {
-            for (var y = position.y - 1; y <= position.y + 1; ++y) {
-                var passable = true;
-                var spot = new RoomPosition(x, y, room.name);
-                spot.look(LOOK_TERRAIN).forEach(function (object) {
-                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object.terrain) == -1;
+        const position = source.pos;
+        for (let x = position.x - 1; x <= position.x + 1; ++x) {
+            for (let y = position.y - 1; y <= position.y + 1; ++y) {
+                let passable = true;
+                const spot = new RoomPosition(x, y, room.name);
+                spot.lookFor(LOOK_TERRAIN).forEach(function (object) {
+                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object['terrain']) == -1;
                 });
                 if (passable) {
-                    var miningSpot = {
+                    const miningSpot = {
                         x: x,
                         y: y,
                         occupied: false,
@@ -70,7 +70,7 @@ function rolePositions(room) {
 }
 
 function getCreepBlueprint(spawningPos, room) {
-    var memory = {
+    const memory = {
         role: global.Role.HARVESTER,
         harvester: {
             miningSpot: occupySpot(spawningPos, room),
@@ -91,25 +91,25 @@ function removeCreep(creepMemory) {
 }
 
 function occupySpot(creepPos, room) {
-    var spots = [];
-    var index = 0;
+    const spots = [];
+    let index = 0;
     room.memory.harvester.miningSpots.forEach(function (spot) {
         if (!spot.occupied) {
-            var position = new RoomPosition(spot.x, spot.y, room.name);
+            const position = new RoomPosition(spot.x, spot.y, room.name);
             position.spot = spot;
             position.index = index;
             spots.push(position);
         }
         ++index;
     });
-    var closest = creepPos.findClosestByPath(spots);
+    const closest = creepPos.findClosestByPath(spots);
     closest.spot.occupied = true;
     return closest.index;
 }
 
 function getSpotFromMemory(creepMemory) {
-    var roomName = creepMemory.harvester.room;
-    var spotIndex = creepMemory.harvester.miningSpot
+    const roomName = creepMemory.harvester.room;
+    const spotIndex = creepMemory.harvester.miningSpot;
     return Game.rooms[roomName].memory.harvester.miningSpots[spotIndex];
 }
 
@@ -118,7 +118,7 @@ function getSpot(creep) {
 }
 
 function gotoSource(creep) {
-    var miningSpot = getSpot(creep);
+    const miningSpot = getSpot(creep);
     creep.moveTo(miningSpot.x, miningSpot.y);
     if (creep.pos.x == miningSpot.x && creep.pos.y == miningSpot.y) {
         creep.memory.harvester.state = State.MINE;
@@ -133,7 +133,7 @@ function mine(creep) {
 }
 
 function lookForTarget(creep) {
-    let sink = resourceManager.findEnergySink(creep);
+    const sink = resourceManager.findEnergySink(creep);
     if (sink) {
         creep.memory.harvester.target = sink.id;
         creep.memory.harvester.state = State.GOTO_TARGET;
@@ -142,27 +142,27 @@ function lookForTarget(creep) {
 }
 
 function gotoTarget(creep) {
-    var target = Game.getObjectById(creep.memory.harvester.target);
+    const target = Game.getObjectById(creep.memory.harvester.target);
     if (target == null) {
         creep.memory.harvester.state = State.LOOK_FOR_TARGET;
         lookForTarget(creep);
     }
     
     creep.moveTo(target);
-    var range = target instanceof StructureController ? 3 : 1;
+    const range = target instanceof StructureController ? 3 : 1;
     if (creep.pos.inRangeTo(target, range)) {
         creep.memory.harvester.state = State.TRANSFER;
     }
 }
 
 function transfer(creep) {
-    var target = Game.getObjectById(creep.memory.harvester.target);
+    const target = Game.getObjectById(creep.memory.harvester.target);
     if (target == null) {
         creep.memory.harvester.state = State.LOOK_FOR_TARGET;
         lookForTarget(creep);
     }
     
-    var result;
+    let result;
     if (target instanceof ConstructionSite) {
         result = creep.build(target);
     }

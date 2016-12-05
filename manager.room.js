@@ -1,5 +1,5 @@
-var rooms;
-var roomCallouts = [];
+let rooms;
+const roomCallouts = [];
 
 module.exports = {
     subscribe: function (callout) {
@@ -8,20 +8,20 @@ module.exports = {
 
     init: function() {
         rooms = [];
-        for (var roomName in Game.rooms) {
-            var room = Game.rooms[roomName];
+        for (let roomName in Game.rooms) {
+            const room = Game.rooms[roomName];
             rooms[roomName] = {
                 population: []
             };
             roomCallouts.forEach(function (callout) {
                 callout(room);
             });
-        };
+        }
     },
     
     addCreep: function(creep) {
-        var roomMemory = rooms[creep.room.name];
-        var role = creep.memory.role;
+        const roomMemory = rooms[creep.room.name];
+        const role = creep.memory.role;
         if (!roomMemory.population[role]) {
             roomMemory.population[role] = 1;
         }

@@ -4,21 +4,21 @@ module.exports = {
 };
 
 function findEnergySource(room) {
-    var spawn = room.find(FIND_MY_SPAWNS)[0];
+    const spawn = room.find(FIND_MY_SPAWNS)[0];
     if (spawn.energy > 200) {
         return spawn; 
     }
 }
 
 function findEnergySink(creep) {
-    var room = creep.room;
+    const room = creep.room;
     return findEmpty(room.find(FIND_MY_SPAWNS))
         || room.controller;
 }
 
 function findEmpty(entities) {
-    for (var entityName in entities) {
-        var entity = entities[entityName];
+    for (let entityName in entities) {
+        const entity = entities[entityName];
         if (entity.energy < entity.energyCapacity) {
             return entity;
         }

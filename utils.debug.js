@@ -1,5 +1,5 @@
 function joinString(...messages) {
-    var string = [];
+    const string = [];
     messages.forEach(function (message) {
         string.push(message);
     });

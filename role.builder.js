@@ -1,8 +1,8 @@
-var resourceManager = require("manager.resources");
-var global = require("utils.globals");
-var roomManager = require("manager.room")
+const resourceManager = require("./manager.resources");
+const global = require("./utils.globals");
+const roomManager = require("./manager.room");
 
-var builderRoom = [];
+const builderRoom = [];
 roomManager.subscribe(initRoom);
 
 module.exports = {
@@ -11,15 +11,15 @@ module.exports = {
 	rolePositions: function(room) { return rolePositions(room); },
 	getCreepBlueprint: function(spawningPos, room) { return getCreepBlueprint(spawningPos, room); },
 	removeCreep: function(creepMemory) { removeCreep(creepMemory); }
-}
+};
 
-var State = {
-	LOOK_FOR_TARGET: 0,
-	GOTO_SOURCE: 1,
-	GET_ENERGY: 2,
-	GOTO_TARGET: 3,
-	BUILD: 4
-}
+const State = {
+    LOOK_FOR_TARGET: 0,
+    GOTO_SOURCE: 1,
+    GET_ENERGY: 2,
+    GOTO_TARGET: 3,
+    BUILD: 4
+};
 
 function act(creep) {
 	switch(creep.memory.builder.state) {
@@ -32,18 +32,18 @@ function act(creep) {
 }
 
 function initRoom(room) {
-	var sites = room.find(FIND_CONSTRUCTION_SITES);
-	var minIntegrity = undefined;
-	var damaged = room.find(FIND_STRUCTURES, {
-		filter: function(structure) {
-			var damaged = structure.hits < structure.hitsMax;
-			if (structure.hits < 10000)
-    			if (minIntegrity == undefined || (damaged && structure.hits < minIntegrity)) {
-    				minIntegrity = structure.hits;
-    			}
-			return damaged;
-		}
-	});
+	const sites = room.find(FIND_CONSTRUCTION_SITES);
+	let minIntegrity = undefined;
+	let damaged = room.find(FIND_STRUCTURES, {
+        filter: function (structure) {
+            const damaged = structure.hits < structure.hitsMax;
+            if (structure.hits < 10000)
+                if (minIntegrity == undefined || (damaged && structure.hits < minIntegrity)) {
+                    minIntegrity = structure.hits;
+                }
+            return damaged;
+        }
+    });
 
 	damaged = _.filter(damaged, function(structure) {
 		return structure.hits < minIntegrity * 10000;
@@ -54,11 +54,11 @@ function initRoom(room) {
 	};
 }
 
-function rolePositions(room) {
+function rolePositions() {
 	return 3;
 }
 
-function getCreepBlueprint(spawningPos, room) {
+function getCreepBlueprint() {
 	return {
 		bodyParts: [WORK, CARRY, MOVE],
 		memory: {
@@ -75,7 +75,7 @@ function removeCreep(creepMemory) {
 }
 
 function lookForTarget(creep) {
-	var room = builderRoom[creep.room.name];
+	const room = builderRoom[creep.room.name];
 	if (room.targets.length == 0) return;
 	if (creep.carry.energy == 0) {
 		if (!room.source) return;
@@ -91,7 +91,7 @@ function lookForTarget(creep) {
 }
 
 function gotoSource(creep) {
-	var source = Game.getObjectById(creep.memory.builder.source);
+	const source = Game.getObjectById(creep.memory.builder.source);
 	creep.moveTo(source);
 	if (creep.pos.isNearTo(source)) {
 		creep.memory.builder.state = State.GET_ENERGY;
@@ -99,7 +99,7 @@ function gotoSource(creep) {
 }
 
 function getEnergy(creep) {
-	var source = Game.getObjectById(creep.memory.builder.source);
+	const source = Game.getObjectById(creep.memory.builder.source);
 	creep.withdraw(source, RESOURCE_ENERGY);
 	if (creep.carry.energy == 0) {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
@@ -110,8 +110,8 @@ function getEnergy(creep) {
 }
 
 function gotoTarget(creep) {
-	var target = Game.getObjectById(creep.memory.builder.target);
-	if (!(target instanceof ConstructionSite) && (target.hits != undefined && target.hits == target.hitsMax)) {
+	const target = Game.getObjectById(creep.memory.builder.target);
+	if (!(target instanceof ConstructionSite) && target.hits == target.hitsMax) {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
@@ -123,7 +123,7 @@ function gotoTarget(creep) {
 }
 
 function build(creep) {
-	var target = Game.getObjectById(creep.memory.builder.target);
+	const target = Game.getObjectById(creep.memory.builder.target);
 	if (target instanceof ConstructionSite) {
 		creep.build(target);
 	}
