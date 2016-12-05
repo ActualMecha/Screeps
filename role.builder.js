@@ -37,9 +37,10 @@ function initRoom(room) {
 	var damaged = room.find(FIND_STRUCTURES, {
 		filter: function(structure) {
 			var damaged = structure.hits < structure.hitsMax;
-			if (minIntegrity == undefined || (damaged && structure.hits < minIntegrity)) {
-				minIntegrity = structure.hits;
-			}
+			if (structure.hits < 10000)
+    			if (minIntegrity == undefined || (damaged && structure.hits < minIntegrity)) {
+    				minIntegrity = structure.hits;
+    			}
 			return damaged;
 		}
 	});
@@ -110,7 +111,7 @@ function getEnergy(creep) {
 
 function gotoTarget(creep) {
 	var target = Game.getObjectById(creep.memory.builder.target);
-	if (!(target instanceof ConstructionSite)) {
+	if (!(target instanceof ConstructionSite) && (target.hits != undefined && target.hits == target.hitsMax)) {
 		creep.memory.builder.state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
