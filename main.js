@@ -3,6 +3,8 @@ const roleSpawner = require("./role.spawner");
 const roomManager = require("./manager.room");
 const debug = require("./utils.debug");
 const rolesManager = require("./manager.roles");
+const progressManager = require("./manager.progress");
+
 debug.turnOn();
 
 function processCreeps() {
@@ -22,6 +24,13 @@ function processSpawns() {
     }
 }
 
+function processRooms() {
+    for (let roomName in Game.rooms) {
+        const room = Game.rooms[roomName];
+        progressManager.run(room);
+    }
+}
+
 function initCreeps() {
     for(let name in Memory.creeps) {
         const creep = Game.creeps[name];
@@ -37,13 +46,16 @@ function initCreeps() {
 
 function init() {
     roomManager.init();
+    progressManager.init();
     initCreeps();
 }
 
 function loop() {
     init();
+    processRooms();
     processCreeps();
     processSpawns();
 }
 
+//noinspection JSUnusedGlobalSymbols
 module.exports.loop = loop;

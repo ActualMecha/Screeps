@@ -37,7 +37,9 @@ function act(creep) {
 
 function initRoom(room) {
     if (room.memory.harvester) return;
-    
+
+    console.log("initializing room");
+
     const miningSpots = [];
     room.find(FIND_SOURCES).forEach(function (source) {
         const position = source.pos;
@@ -45,8 +47,8 @@ function initRoom(room) {
             for (let y = position.y - 1; y <= position.y + 1; ++y) {
                 let passable = true;
                 const spot = new RoomPosition(x, y, room.name);
-                spot.lookFor(LOOK_TERRAIN).forEach(function (object) {
-                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object['terrain']) == -1;
+                spot.lookFor(LOOK_TERRAIN).forEach(object => {
+                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object) == -1;
                 });
                 if (passable) {
                     const miningSpot = {

@@ -7,7 +7,7 @@ roles[global.Role.BUILDER] = require("./role.builder");
 
 module.exports = {
     act: function (creep) {
-        roles[creep.memory.role].act(creep);   
+        roles[creep.memory.role].act(creep);
     },
     
     planCreep: function(spawner) {
