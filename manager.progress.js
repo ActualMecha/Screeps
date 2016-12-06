@@ -1,4 +1,4 @@
-const architect = require("./architect.js");
+const architect = require("./architect");
 
 const Progress = {
     SPAWN_ROAD: 0
@@ -38,8 +38,12 @@ function roadSpawn(spawn) {
     if (!spawn.memory.progress[Progress.SPAWN_ROAD]) {
         spawn.memory.progress[Progress.SPAWN_ROAD] = []
     }
-    const sites = architect.roadsAroundSpawn(spawn);
+    let sites = architect.roadAround(spawn.pos);
+    spawn.room.find(FIND_SOURCES).forEach(source => {
+        sites = sites.concat(architect.roadBetween(spawn.pos, source.pos));
+    });
     sites.forEach(site => {
+        console.log(site);
         spawn.memory.progress[Progress.SPAWN_ROAD].push(site);
     });
     spawn.room.memory.progress[Progress.SPAWN_ROAD] = false;

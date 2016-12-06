@@ -21,5 +21,9 @@ module.exports = {
         if (Memory.debug === true) {
             console.log(joinString(messages));
         }
+    },
+
+    error: function(...messages) {
+        console.log(joinString(messages));
     }
 };
