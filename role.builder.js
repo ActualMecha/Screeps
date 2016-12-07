@@ -1,13 +1,12 @@
 const resourceManager = require("./manager.resources");
-const global = require("./utils.globals");
+const global = require("./globals");
 const roomManager = require("./manager.room");
 
 const builderRoom = [];
-roomManager.subscribe(initRoom);
+roomManager.onRoomTick(initRoom);
 
 module.exports = {
 	act: function(creep) { act(creep); },
-	initRoom: function(room) { initRoom(room); },
 	rolePositions: function(room) { return rolePositions(room); },
 	getCreepBlueprint: function(spawningPos, room) { return getCreepBlueprint(spawningPos, room); },
 	removeCreep: function(creepMemory) { removeCreep(creepMemory); }

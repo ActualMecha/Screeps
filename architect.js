@@ -1,5 +1,5 @@
 const debug = require("./utils.debug");
-const utils = require("./utils.functions");
+const utils = require("./utils");
 
 module.exports = {
     roadAround: function (pos) { return roadAround(pos); },

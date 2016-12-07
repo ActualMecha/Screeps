@@ -1,4 +1,4 @@
-const global = require("./utils.globals");
+const global = require("./globals");
 const roomManager = require("./manager.room");
 
 const roles = [];

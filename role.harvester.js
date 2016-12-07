@@ -1,18 +1,17 @@
 const debug = require("./utils.debug");
 const resourceManager = require("./manager.resources");
-const global = require("./utils.globals");
+const global = require("./globals");
 const roomManager = require("./manager.room");
-
-roomManager.subscribe(initRoom);
 
 module.exports = {
     act: function(creep) { act(creep); },
-    initRoom: function(room) { initRoom(room); },
     rolePositions: function(room) { return rolePositions(room); },
     getCreepBlueprint: function(spawningPos, room) { return getCreepBlueprint(spawningPos, room); },
     removeCreep: function(creepMemory) { removeCreep(creepMemory) }
 };
 
+roomManager.onRoomTick(roomTick);
+roomManager.onNewRoom(newRoom);
 
 const State = {
     GOTO_SOURCE: 1,
@@ -35,11 +34,11 @@ function act(creep) {
     }   
 }
 
-function initRoom(room) {
-    if (room.memory.harvester) return;
+function roomTick(room) {
 
-    console.log("initializing room");
+}
 
+function newRoom(room) {
     const miningSpots = [];
     room.find(FIND_SOURCES).forEach(function (source) {
         const position = source.pos;
@@ -55,7 +54,9 @@ function initRoom(room) {
                         x: x,
                         y: y,
                         occupied: false,
-                        sourceId: source.id
+                        sourceId: source.id,
+                        path: false,
+                        road: false
                     };
                     miningSpots.push(miningSpot);
                 }
