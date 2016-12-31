@@ -1,6 +1,7 @@
 const architect = require("./architect");
 const spawnerRole = require("./role.spawner");
 const creepManager = require("./manager.creep");
+const resourceManager = require("./manager.resources");
 const utils = require("./utils");
 const debug = require("./utils.debug");
 
@@ -14,6 +15,7 @@ function firstTick() {
     for (let name in Game.spawns) {
         const spawn = Game.spawns[name];
         setMemory({spawns: [spawn.id]});
+        resourceManager.init(spawn.room);
         initOvermind(spawn);
         spawnerRole.init(spawn);
     }
@@ -120,7 +122,7 @@ function buildSinkContainer(spawn) {
     debug.log("Step: building a sink container");
     let sinkContainer = utils.getSignal(waitSignal(spawn));
     if (sinkContainer) {
-        memory(spawn).sinkContainer = sinkContainer;
+        resourceManager.setContainerSink(Game.getObjectById(sinkContainer));
         return false;
     }
 

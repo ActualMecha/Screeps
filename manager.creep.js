@@ -29,7 +29,6 @@ function tick(creepName) {
             debug.log("Replacing a creep");
             let spawn = Game.getObjectById(replacer);
             let blueprint = roles[roleMemory.role].replaceCreep(allMemory);
-            debug.log("new blueprint", JSON.stringify(blueprint));
             spawner.planCreep(spawn, blueprint);
         }
         else
