@@ -25,5 +25,11 @@ module.exports = {
 
     error: function(...messages) {
         console.log(joinString(messages));
+    },
+
+    assert: function(condition, ...messages) {
+        if (Memory.debug === true && !condition) {
+            console.log(joinString(messages));
+        }
     }
 };

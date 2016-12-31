@@ -1,26 +1,105 @@
 const architect = require("./architect");
-
-const Progress = {
-    SPAWN_ROAD: 0
-};
+const spawnerRole = require("./role.spawner");
+const creepManager = require("./manager.creep");
+const utils = require("./utils");
+const debug = require("./utils.debug");
 
 module.exports = {
-    init: function() { init(); },
-    run: function(room) { run(room); }
+    firstTick: function() { firstTick(); },
+    tick: function() { tick(); }
 };
 
-function run(room) {
-    if (!room.memory.progress) {
-        room.memory.progress = [];
+//region Ticks
+function firstTick() {
+    for (let name in Game.spawns) {
+        const spawn = Game.spawns[name];
+        setMemory({spawns: [spawn.id]});
+        initOvermind(spawn);
+        spawnerRole.init(spawn);
     }
+}
 
-    if (room.memory.progress[Progress.SPAWN_ROAD] === undefined) {
-        roadAllSpawns(room);
+function tick() {
+    memory().spawns.forEach(overmind => {
+        let spawn = Game.getObjectById(overmind);
+        tickOvermind(spawn);
+    });
+}
+
+function tickOvermind(spawn) {
+    if (waiting(spawn))
         return;
-    }
-    else if (room.memory.progress[Progress.SPAWN_ROAD] === false) {
-        checkSpawnRoads(room);
-        return;
+
+    saturate(spawn);
+}
+//endregion
+
+//region Initialization
+function initOvermind(spawn) {
+    setOvermindMemory(spawn, {
+        sources: initSources(spawn),
+        crowdMining: true,
+        miningSpots: findMiningSpots(spawn),
+        saturating: 0
+    });
+}
+
+function initSources(spawn) {
+    const room = spawn.room;
+    let sources = [];
+    spawn.room.find(FIND_SOURCES).forEach(source => {
+        let route = spawn.pos.findPathTo(source.pos, { "serialize": true });
+
+        sources.push({
+            sourceId: source.id,
+            path: route,
+            road: false
+        });
+    });
+    return sources;
+}
+
+function findMiningSpots(spawn) {
+    const miningSpots = [];
+    spawn.room.find(FIND_SOURCES).forEach(function (source) {
+        const position = source.pos;
+        for (let x = position.x - 1; x <= position.x + 1; ++x) {
+            for (let y = position.y - 1; y <= position.y + 1; ++y) {
+                let passable = true;
+                const spot = new RoomPosition(x, y, spawn.room.name);
+                spot.lookFor(LOOK_TERRAIN).forEach(object => {
+                    passable &= OBSTACLE_OBJECT_TYPES.indexOf(object) == -1;
+                });
+                if (passable) {
+                    const miningSpot = {
+                        x: x,
+                        y: y,
+                        sourceId: source.id,
+                        path: false,
+                        road: false
+                    };
+                    miningSpots.push(miningSpot);
+                }
+            }
+        }
+    });
+    return miningSpots;
+}
+//endregion
+
+//region Progress Steps
+function saturate(spawn) {
+    let saturating = overmindMemory(spawn).saturating;
+    if (saturating !== undefined) {
+        debug.log("Planning a new worker");
+        const spot = overmindMemory(spawn).miningSpots[saturating];
+        wait(spawn);
+        creepManager.planWorker(spawn, spot, waitSignal(spawn));
+        ++saturating;
+        if (saturating >= overmindMemory(spawn).miningSpots.length)
+            delete overmindMemory(spawn).saturating;
+        else
+            overmindMemory(spawn).saturating = saturating;
     }
 }
 
@@ -76,11 +155,40 @@ function checkSpawnRoads(room) {
             delete spawn.memory.progress;
         }
     });
+}
+//endregion
 
+//region Utils
+function stripRoom(path) {
+    path.forEach(pos => delete pos.room);
+    return path;
 }
 
-function init() {
-    if (!Memory.progress) {
-        Memory.progress = {};
-    }
+function waiting(spawn) {
+    return utils.getSignal(waitSignal(spawn)) === false;
 }
+
+function wait(spawn) {
+    utils.setSignal(waitSignal(spawn), false);
+}
+
+function waitSignal(spawn) {
+    return "overlord." + spawn.id + ".syncing";
+}
+
+function setOvermindMemory(spawn, mem) {
+    spawn.memory.overmind = mem;
+}
+
+function overmindMemory(spawn) {
+    return spawn.memory.overmind;
+}
+
+function setMemory(memory) {
+    Memory.overmind = memory;
+}
+
+function memory() {
+    return Memory.overmind;
+}
+//endregion
