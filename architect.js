@@ -1,10 +1,59 @@
 const debug = require("./utils.debug");
 const utils = require("./utils");
+const Queue = require("./datastructure.queue");
 
 module.exports = {
+    init: function() { init(); },
+    tick: function() { tick(); },
+    buildSingleStructure: function(structure, position, readySignal) { buildSingleStructure(structure, position, readySignal); },
     roadAround: function (pos) { return roadAround(pos); },
     roadBetween: function(pos1, pos2) {return roadBetween(pos1, pos2); }
 };
+
+function init() {
+    setMemory({
+        allProjects: new Queue()
+    });
+}
+
+function tick() {
+    const mem = memory();
+    let project = mem.currentProject;
+    let projectQueue = new Queue(mem.allProjects);
+    if (project === undefined) {
+        if (!projectQueue.isEmpty())
+            project = projectQueue.pop();
+        else
+            return;
+        mem.currentProject = project;
+    }
+
+    const roomName = project.position.roomName;
+    const room = Game.rooms[roomName];
+    let position = new RoomPosition(project.position.x, project.position.y, project.position.roomName);
+    if (!project.started) {
+        room.createConstructionSite(position, project.structure);
+        project.started = true;
+    }
+
+    let finished = false;
+    room.lookForAt(LOOK_STRUCTURES, position).forEach(structure => {
+        if (structure.structureType == project.structure)
+            finished = structure.id;
+    });
+    if (finished)
+        utils.setSignal(project.readySignal, finished);
+}
+
+function buildSingleStructure(structure, position, readySignal) {
+    let projects = new Queue(memory().allProjects);
+    projects.push({
+        started: false,
+        structure: structure,
+        position: position,
+        readySignal: readySignal
+    })
+}
 
 function roadAround(pos) {
     return createRoads([
@@ -38,4 +87,12 @@ function createRoads(positions) {
         }
     });
     return sites;
+}
+
+function memory() {
+    return Memory.architect;
+}
+
+function setMemory(memory) {
+    Memory.architect = memory;
 }

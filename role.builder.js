@@ -1,13 +1,11 @@
 const resourceManager = require("./manager.resources");
-const global = require("./globals");
 
 const builderRoom = [];
 
 module.exports = {
 	tick: function(creep) { act(creep); },
-	rolePositions: function(room) { return rolePositions(room); },
-	getCreepBlueprint: function(spawningPos, room) { return getCreepBlueprint(spawningPos, room); },
-	removeCreep: function(creepMemory) { removeCreep(creepMemory); }
+	getCreepBlueprint: function(spawn) { return getCreepBlueprint(spawn); },
+	replaceCreep: function(creepMemory) { return replaceCreep(creepMemory); }
 };
 
 const State = {
@@ -19,7 +17,8 @@ const State = {
 };
 
 function act(creep) {
-	switch(creep.memory.builder.state) {
+    initRoom(creep.room);
+	switch(memory(creep).state) {
 	case State.LOOK_FOR_TARGET: lookForTarget(creep); break;
 	case State.GOTO_SOURCE: gotoSource(creep); break;
 	case State.GET_ENERGY: getEnergy(creep); break;
@@ -51,24 +50,23 @@ function initRoom(room) {
 	};
 }
 
-function rolePositions() {
-	return 3;
-}
-
 function getCreepBlueprint() {
-	return {
-		bodyParts: [WORK, CARRY, MOVE],
-		memory: {
-			role: global.Role.BUILDER,
-			builder: {
-				state: State.LOOK_FOR_TARGET
-			}
-		}
-	}
+    let bp = {
+        bodyParts: [WORK, CARRY, MOVE],
+        memory: {}
+    };
+    setMemory(bp, {
+        state: State.LOOK_FOR_TARGET
+    });
+    return bp;
 }
 
-function removeCreep(creepMemory) {
-	delete creepMemory.builder;
+function replaceCreep(creepMemory) {
+    rawMemory(creepMemory).state = State.LOOK_FOR_TARGET;
+    return {
+        bodyParts: [WORK, CARRY, MOVE],
+        memory: creepMemory
+    }
 }
 
 function lookForTarget(creep) {
@@ -76,51 +74,51 @@ function lookForTarget(creep) {
 	if (room.targets.length == 0) return;
 	if (creep.carry.energy == 0) {
 		if (!room.source) return;
-		creep.memory.builder.source = room.source.id;
-		creep.memory.builder.state = State.GOTO_SOURCE;
+		memory(creep).source = room.source.id;
+		memory(creep).state = State.GOTO_SOURCE;
 		gotoSource(creep);
 	}
 	else {
-		creep.memory.builder.target = room.targets[0].id;
-		creep.memory.builder.state = State.GOTO_TARGET;
+		memory(creep).target = room.targets[0].id;
+		memory(creep).state = State.GOTO_TARGET;
 		gotoTarget(creep);
 	}
 }
 
 function gotoSource(creep) {
-	const source = Game.getObjectById(creep.memory.builder.source);
+	const source = Game.getObjectById(memory(creep).source);
 	creep.moveTo(source);
 	if (creep.pos.isNearTo(source)) {
-		creep.memory.builder.state = State.GET_ENERGY;
+		memory(creep).state = State.GET_ENERGY;
 	}
 }
 
 function getEnergy(creep) {
-	const source = Game.getObjectById(creep.memory.builder.source);
+	const source = Game.getObjectById(memory(creep).source);
 	creep.withdraw(source, RESOURCE_ENERGY);
 	if (creep.carry.energy == 0) {
-		creep.memory.builder.state = State.LOOK_FOR_TARGET;
+		memory(creep).state = State.LOOK_FOR_TARGET;
 	}
 	else {
-		creep.memory.builder.state = State.LOOK_FOR_TARGET;
+		memory(creep).state = State.LOOK_FOR_TARGET;
 	}
 }
 
 function gotoTarget(creep) {
-	const target = Game.getObjectById(creep.memory.builder.target);
+	const target = Game.getObjectById(memory(creep).target);
 	if (!(target instanceof ConstructionSite) && target.hits == target.hitsMax) {
-		creep.memory.builder.state = State.LOOK_FOR_TARGET;
+		memory(creep).state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
 	}
 	creep.moveTo(target);
 	if (creep.pos.isNearTo(target)) {
-		creep.memory.builder.state = State.BUILD;
+		memory(creep).state = State.BUILD;
 	}
 }
 
 function build(creep) {
-	const target = Game.getObjectById(creep.memory.builder.target);
+	const target = Game.getObjectById(memory(creep).target);
 	if (target instanceof ConstructionSite) {
 		creep.build(target);
 	}
@@ -128,11 +126,23 @@ function build(creep) {
 		creep.repair(target);
 	}
 	else {
-		creep.memory.builder.state = State.LOOK_FOR_TARGET;
+		memory(creep).state = State.LOOK_FOR_TARGET;
 		lookForTarget(creep);
 		return;
 	}
 	if (creep.carry.energy == 0) {
-		creep.memory.builder.state = State.LOOK_FOR_TARGET;
+		memory(creep).state = State.LOOK_FOR_TARGET;
 	}
+}
+
+function memory(creep) {
+	return creep.memory.builder;
+}
+
+function setMemory(creep, memory) {
+	creep.memory.builder = memory;
+}
+
+function rawMemory(memory) {
+    return memory.builder;
 }

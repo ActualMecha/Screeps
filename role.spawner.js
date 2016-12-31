@@ -1,5 +1,4 @@
 const utils = require("./utils");
-const debug = require("./utils.debug");
 const Queue = require("./datastructure.queue");
 
 const priceList = {
@@ -36,7 +35,8 @@ function tick(spawn) {
         planned.pop();
         spawn.createCreep(plan.blueprint.bodyParts, undefined, plan.blueprint.memory);
         setPlanned(spawn, planned);
-        utils.setSignal(plan.signalName, true);
+        if (plan.signalName)
+            utils.setSignal(plan.signalName, true);
     }
 }
 

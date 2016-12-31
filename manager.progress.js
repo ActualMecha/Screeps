@@ -30,22 +30,25 @@ function tickOvermind(spawn) {
     if (waiting(spawn))
         return;
 
-    saturate(spawn);
+    let mem = overmindMemory(spawn);
+    let step = mem.progressStep;
+    while (!progressSteps[step](spawn)) {
+        mem.progressStep = step = step + 1;
+        utils.setSignal(waitSignal(spawn), undefined);
+    }
 }
 //endregion
 
 //region Initialization
 function initOvermind(spawn) {
     setOvermindMemory(spawn, {
-        sources: initSources(spawn),
-        crowdMining: true,
+        progressStep: 0,
         miningSpots: findMiningSpots(spawn),
         saturating: 0
     });
 }
 
 function initSources(spawn) {
-    const room = spawn.room;
     let sources = [];
     spawn.room.find(FIND_SOURCES).forEach(source => {
         let route = spawn.pos.findPathTo(source.pos, { "serialize": true });
@@ -88,82 +91,53 @@ function findMiningSpots(spawn) {
 //endregion
 
 //region Progress Steps
+const progressSteps = [saturate, makeBuilders, buildSinkContainer, idle];
+
 function saturate(spawn) {
+    debug.log("Step: saturating");
     let saturating = overmindMemory(spawn).saturating;
-    if (saturating !== undefined) {
-        debug.log("Planning a new worker");
-        const spot = overmindMemory(spawn).miningSpots[saturating];
-        wait(spawn);
-        creepManager.planWorker(spawn, spot, waitSignal(spawn));
-        ++saturating;
-        if (saturating >= overmindMemory(spawn).miningSpots.length)
-            delete overmindMemory(spawn).saturating;
-        else
-            overmindMemory(spawn).saturating = saturating;
-    }
+    if (saturating === undefined) return false;
+
+    debug.log("Planning a new worker");
+    const spot = overmindMemory(spawn).miningSpots[saturating];
+    wait(spawn);
+    creepManager.planWorker(spawn, spot, waitSignal(spawn));
+    ++saturating;
+    if (saturating >= overmindMemory(spawn).miningSpots.length)
+        delete overmindMemory(spawn).saturating;
+    else
+        overmindMemory(spawn).saturating = saturating;
+    return true;
 }
 
-function roadAllSpawns(room) {
-    room.memory.progress[Progress.SPAWN_ROAD] = true;
-    room.find(FIND_MY_SPAWNS).forEach(spawn => {
-        roadSpawn(spawn);
-    });
+function makeBuilders(spawn) {
+    debug.log("Step: making builders");
+    creepManager.planBuilders(spawn, 4);
+    return false;
 }
 
-function roadSpawn(spawn) {
-    if (!spawn.memory.progress) {
-        spawn.memory.progress = [];
+function buildSinkContainer(spawn) {
+    debug.log("Step: building a sink container");
+    let sinkContainer = utils.getSignal(waitSignal(spawn));
+    if (sinkContainer) {
+        memory(spawn).sinkContainer = sinkContainer;
+        return false;
     }
-    if (!spawn.memory.progress[Progress.SPAWN_ROAD]) {
-        spawn.memory.progress[Progress.SPAWN_ROAD] = []
-    }
-    let sites = architect.roadAround(spawn.pos);
-    spawn.room.find(FIND_SOURCES).forEach(source => {
-        sites = sites.concat(architect.roadBetween(spawn.pos, source.pos));
-    });
-    sites.forEach(site => {
-        console.log(site);
-        spawn.memory.progress[Progress.SPAWN_ROAD].push(site);
-    });
-    spawn.room.memory.progress[Progress.SPAWN_ROAD] = false;
+
+    wait(spawn);
+    const sinkPosition = spawn.pos;
+    sinkPosition.y -= 1;
+    architect.buildSingleStructure(STRUCTURE_CONTAINER, sinkPosition, waitSignal(spawn));
+    return true;
 }
 
-function checkSpawnRoads(room) {
-    const spawns = room.find(FIND_MY_SPAWNS);
-    let foundSite = false;
-    spawns.forEach(spawn => {
-        const roadPositions = spawn.memory.progress[Progress.SPAWN_ROAD];
-
-        for (let index in roadPositions) {
-            const roadPos = roadPositions[index];
-            const pos = new RoomPosition(roadPos.x, roadPos.y, roadPos.roomName);
-            if (pos.lookFor(LOOK_CONSTRUCTION_SITES).length > 0) {
-                foundSite = true;
-                return;
-            }
-            const last = roadPositions.length - 1;
-            roadPositions[index] = roadPositions[last];
-            roadPositions.splice(last, 1);
-        }
-    });
-    if (foundSite) return;
-
-    room.memory.progress[Progress.SPAWN_ROAD] = true;
-    spawns.forEach(spawn => {
-        spawn.memory.progress.splice(Progress.SPAWN_ROAD, 1);
-        if (spawn.memory.progress.length === 0) {
-            delete spawn.memory.progress;
-        }
-    });
+function idle(spawn) {
+    console.log('Overmind ' + spawn.name + ' has nothing to do');
+    return true;
 }
 //endregion
 
 //region Utils
-function stripRoom(path) {
-    path.forEach(pos => delete pos.room);
-    return path;
-}
-
 function waiting(spawn) {
     return utils.getSignal(waitSignal(spawn)) === false;
 }
