@@ -42,7 +42,7 @@ function getCreepBlueprint(miningPos, sourceId) {
 }
 
 function replaceCreep(memory) {
-    memory.state = State.GOTO_SOURCE;
+    rawMemory(memory).state = State.GOTO_SOURCE;
     return {
         bodyParts: [WORK, CARRY, MOVE],
         memory: memory
@@ -115,6 +115,10 @@ function transfer(creep) {
 
 function memory(creep) {
     return creep.memory.worker;
+}
+
+function rawMemory(memory) {
+    return memory.worker;
 }
 
 function setMemory(creep, memory) {
