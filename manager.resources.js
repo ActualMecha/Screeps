@@ -14,19 +14,16 @@ function setContainerSink(container) {
 }
 
 function findEnergySource(room) {
-    const container = getContainerSink(room);
-    if (container) return container;
-
-    const spawn = room.find(FIND_MY_SPAWNS)[0];
-    if (spawn.energy > 200) {
-        return spawn; 
-    }
+    return getContainerSink(room);
 }
 
 function findEnergySink(creep) {
     const room = creep.room;
+    if (!creep)
+        console.log("!!!");
     return getContainerSink(room)
         || findEmpty(room.find(FIND_MY_SPAWNS))
+        || creep.pos.findClosestByPath(room.find(FIND_CONSTRUCTION_SITES))
         || room.controller;
 }
 
@@ -45,7 +42,7 @@ function getContainerSink(room) {
 }
 
 function setMemory(room, memory) {
-    room.memory.resources = {};
+    room.memory.resources = memory;
 }
 
 function memory(room) {

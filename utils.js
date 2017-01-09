@@ -1,20 +1,25 @@
 const debug = require("./utils.debug");
 
 module.exports = {
-    posToString: function (pos) { return posToString(pos); },
-
+    convertRoomPathToGlobalPath: function(roomPath, roomName) { return convertRoomPathToGlobalPath(roomPath, roomName); },
     setupSignals: function() { setupSignals(); },
     setSignal: function (name, value) { setSignal(name, value); },
     getSignal: function (name) { return getSignal(name); },
     deleteSignal: function (name) { deleteSignal(name); }
 };
 
-function setupSignals() {
-    Memory.sync = {};
+function convertRoomPathToGlobalPath(roomPath, roomName) {
+    const path = [];
+    for (let i = 0; i < roomPath.length; ++i) {
+        const pos = roomPath[i];
+        path.push({x: pos.x, y: pos.y, roomName: roomName});
+    }
+    return path;
 }
 
-function posToString(pos) {
-    return "(" + pos.x + ":" + pos.y + ")" + pos.roomName;
+
+function setupSignals() {
+    Memory.sync = {};
 }
 
 function setSignal(name, value) {
@@ -29,3 +34,4 @@ function deleteSignal(name) {
     debug.assert(Memory.sync[name] !== undefined, "Signal ", name, "does not exist");
     delete Memory.sync[name];
 }
+

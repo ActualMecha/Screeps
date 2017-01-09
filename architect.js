@@ -1,4 +1,4 @@
-const debug = require("./utils.debug");
+    const debug = require("./utils.debug");
 const utils = require("./utils");
 const Queue = require("./datastructure.queue");
 
@@ -6,8 +6,8 @@ module.exports = {
     init: function() { init(); },
     tick: function() { tick(); },
     buildSingleStructure: function(structure, position, readySignal) { buildSingleStructure(structure, position, readySignal); },
-    roadAround: function (pos) { return roadAround(pos); },
-    roadBetween: function(pos1, pos2) {return roadBetween(pos1, pos2); }
+    roadAround: function (pos, readySignal) { roadAround(pos, readySignal); },
+    roadPath: function (positions, readySignal) { roadPath(positions, readySignal); }
 };
 
 function init() {
@@ -22,71 +22,85 @@ function tick() {
     let projectQueue = new Queue(mem.allProjects);
     if (project === undefined) {
         if (!projectQueue.isEmpty())
-            project = projectQueue.pop();
+            mem.currentProject = project = projectQueue.pop();
         else
             return;
-        mem.currentProject = project;
     }
 
-    const roomName = project.position.roomName;
-    const room = Game.rooms[roomName];
-    let position = new RoomPosition(project.position.x, project.position.y, project.position.roomName);
     if (!project.started) {
-        room.createConstructionSite(position, project.structure);
+        project.structures.forEach(structure => {
+            const position = new RoomPosition(structure.position.x, structure.position.y, structure.position.roomName);
+            Game.rooms[position.roomName].createConstructionSite(position, structure.type);
+        });
         project.started = true;
     }
 
-    let finished = false;
-    room.lookForAt(LOOK_STRUCTURES, position).forEach(structure => {
-        if (structure.structureType == project.structure)
-            finished = structure.id;
-    });
-    if (finished)
-        utils.setSignal(project.readySignal, finished);
+    if(project.started) {
+        while (project.finished < project.total && currentStructureDone(project)) {
+            ++project.finished;
+        }
+    }
+
+    if (project.finished == project.total) {
+        utils.setSignal(project.readySignal, true);
+        delete mem.currentProject;
+    }
+}
+
+function currentStructureDone(project) {
+    const structure = project.structures[project.finished];
+    const position = new RoomPosition(structure.position.x, structure.position.y, structure.position.roomName);
+    const builtStructures = Game.rooms[position.roomName].lookForAt(LOOK_STRUCTURES, position);
+    for (let i in builtStructures) {
+        let builtStructure = builtStructures[i];
+        if (builtStructure.structureType == structure.type)
+            return true;
+    }
+    return false;
 }
 
 function buildSingleStructure(structure, position, readySignal) {
     let projects = new Queue(memory().allProjects);
     projects.push({
         started: false,
-        structure: structure,
-        position: position,
-        readySignal: readySignal
+        finished: 0,
+        total: 1,
+        readySignal: readySignal,
+        structures: [{
+            type: structure,
+            position: position
+        }]
     })
 }
 
-function roadAround(pos) {
-    return createRoads([
+function roadAround(pos, readySignal) {
+    createRoads([
         new RoomPosition(pos.x - 1, pos.y, pos.roomName),
         new RoomPosition(pos.x, pos.y - 1, pos.roomName),
         new RoomPosition(pos.x + 1, pos.y, pos.roomName),
         new RoomPosition(pos.x, pos.y + 1, pos.roomName)
-    ]);
+    ], readySignal);
 }
 
-function roadBetween(pos1, pos2) {
-    console.log("finding roads");
-    let path = PathFinder.search(pos1, {pos: pos2, range: 1});
-    if (path.incomplete) {
-        console.log("cannot find road between ("
-            + utils.posToString(pos1) + " and "
-            + utils.posToString(pos2));
-    }
-    return createRoads(path.path);
+function roadPath(positions, readySignal) {
+    createRoads(positions, readySignal);
 }
 
-function createRoads(positions) {
+function createRoads(positions, readySignal) {
     const sites = [];
     positions.forEach(pos => {
-        const result = pos.createConstructionSite(STRUCTURE_ROAD);
-        if (result == OK) {
-            sites.push(pos);
-        }
-        else {
-            debug.error("Failed to create a road at ", utils.posToString(pos));
-        }
+        sites.push({
+            type: STRUCTURE_ROAD,
+            position: pos
+        })
     });
-    return sites;
+    new Queue(memory().allProjects).push({
+        started: false,
+        finished: 0,
+        total: sites.length,
+        readySignal: readySignal,
+        structures: sites
+    });
 }
 
 function memory() {

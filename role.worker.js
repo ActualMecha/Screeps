@@ -31,7 +31,7 @@ function tick(creep) {
 
 function getCreepBlueprint(miningPos, sourceId) {
     let bp = {
-        bodyParts: [WORK, CARRY, MOVE],
+        bodyParts: [WORK, WORK, CARRY, MOVE],
         memory: {}
     };
     setMemory(bp, {
@@ -44,7 +44,7 @@ function getCreepBlueprint(miningPos, sourceId) {
 function replaceCreep(memory) {
     rawMemory(memory).state = State.GOTO_SOURCE;
     return {
-        bodyParts: [WORK, CARRY, MOVE],
+        bodyParts: [WORK, WORK, CARRY, MOVE],
         memory: memory
     }
 }
@@ -73,18 +73,24 @@ function lookForTarget(creep) {
     if (sink) {
         memory(creep).target = sink.id;
         memory(creep).state = State.GOTO_TARGET;
-        gotoTarget(creep);
+        return gotoTarget(creep);
     }
 }
 
 function gotoTarget(creep) {
     const target = Game.getObjectById(memory(creep).target);
-    if (target == null) {
+    if (!target) {
         memory(creep).state = State.LOOK_FOR_TARGET;
-        lookForTarget(creep);
+        return lookForTarget(creep);
     }
-    
+
     creep.moveTo(target);
+    const damaged = _.find(creep.pos.findInRange(FIND_STRUCTURES, 1), structure => structure.hits < structure.hitsMax);
+    if (damaged) {
+        creep.repair(damaged);
+        if (creep.carry.energy == 0)
+            memory(creep).state = State.GOTO_SOURCE;
+    }
     const range = target instanceof StructureController ? 3 : 1;
     if (creep.pos.inRangeTo(target, range)) {
         memory(creep).state = State.TRANSFER;
@@ -95,7 +101,7 @@ function transfer(creep) {
     const target = Game.getObjectById(memory(creep).target);
     if (target == null) {
         memory(creep).state = State.LOOK_FOR_TARGET;
-        lookForTarget(creep);
+        return lookForTarget(creep);
     }
     
     let result;
