@@ -1,5 +1,4 @@
 const spawner = require("./role.spawner");
-const debug = require("./utils.debug");
 
 const Role = {
     WORKER: 0,

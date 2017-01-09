@@ -3,7 +3,6 @@ const spawnerRole = require("./role.spawner");
 const creepManager = require("./manager.creep");
 const resourceManager = require("./manager.resources");
 const utils = require("./utils");
-const debug = require("./utils.debug");
 
 module.exports = {
     firstTick: function() { firstTick(); },
@@ -139,13 +138,6 @@ function buildSinkContainer(spawn) {
 
 function idle(spawn) {
     console.log('Overmind ' + spawn.name + ' has nothing to do');
-    return true;
-}
-
-function buildRoadsAroundSpawn(spawn) {
-    if (utils.getSignal(waitSignal(spawn))) return false;
-    architect.roadAround(spawn.pos, waitSignal(spawn));
-    wait(spawn);
     return true;
 }
 

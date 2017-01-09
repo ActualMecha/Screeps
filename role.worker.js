@@ -1,6 +1,5 @@
 const debug = require("./utils.debug");
 const resourceManager = require("./manager.resources");
-const global = require("./globals");
 
 module.exports = {
     tick: function(creep) { tick(creep); },
